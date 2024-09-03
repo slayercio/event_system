@@ -1,4 +1,5 @@
 #pragma once
+#include "evs/debug.hpp"
 #include <any>
 #include <cstdint>
 #include <evs/evs.hpp>
@@ -30,17 +31,23 @@ namespace evs
     Event<DataType, IdType>::Event(IdType id, DataType data)
         : m_Id(id), m_Data(data)
     {
+        EVS_DEBUG_CALL();
     }
 
     template<typename DataType, typename IdType>
     const DataType Event<DataType, IdType>::Data() const
     {
+        EVS_DEBUG_CALL();
+
         return m_Data;
     }
 
     template<typename DataType, typename IdType>
     const IdType Event<DataType, IdType>::Id() const
     {
+        EVS_DEBUG_CALL();
+        EVS_DEBUG_EXPR(m_Id);
+
         return m_Id;
     }
 }

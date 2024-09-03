@@ -29,6 +29,7 @@ namespace evs
     template<typename DataType, typename IdType>
     EventListener<DataType, IdType>::EventListener(std::function<bool(const DataType& data)> handler, IdType id)
     {
+        EVS_DEBUG_CALL();
         m_Handler = handler;
         m_EventId = id;
     }
@@ -36,6 +37,7 @@ namespace evs
     template<typename DataType, typename IdType>
     bool EventListener<DataType, IdType>::Execute(const evs::Event<DataType, IdType>& event) const
     {
+        EVS_DEBUG_CALL();
         auto data = event.Data();
 
         return m_Handler(data);
@@ -44,6 +46,7 @@ namespace evs
     template<typename DataType, typename IdType>
     IdType EventListener<DataType, IdType>::EventId() const
     {
+        EVS_DEBUG_CALL();
         return m_EventId;
     }
 }

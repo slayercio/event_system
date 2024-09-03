@@ -40,8 +40,8 @@ namespace evs
     {
         using event_handler_type = evs::EventListener<DataType, IdType>::handler_type;
 
-        virtual void Emit(const evs::Event<DataType, IdType>& event) {}
-        virtual void On(IdType eventId, event_handler_type handler) {}
+        virtual void Emit(const evs::Event<DataType, IdType>& event) { EVS_DEBUG_CALL(); }
+        virtual void On(IdType eventId, event_handler_type handler) { EVS_DEBUG_CALL(); }
     };
 
     template<typename DataType, typename IdType>
@@ -49,7 +49,7 @@ namespace evs
     {
         ThreadedEventBus()
         {
-            std::cout << "ThreadedEventBus()" << std::endl;
+            EVS_DEBUG_CALL();
             m_Running = true;
             m_Thread = std::thread(&ThreadedEventBus<DataType, IdType>::WaitForEvents, this);
 
@@ -59,7 +59,7 @@ namespace evs
 
         ~ThreadedEventBus()
         {
-            std::cout << "~ThreadedEventBus()" << std::endl;
+            EVS_DEBUG_CALL();
             m_Running = false;
             m_Thread.join();
         }
@@ -67,10 +67,10 @@ namespace evs
         void WaitForEvents()
         {
             std::unique_lock<std::mutex> lock(m_EventsMutex);
-            std::cout << "WaitForEvents()" << std::endl;
+            EVS_DEBUG_CALL();
 
             auto emitEvent = [&, this] {
-                std::cout << "emitEvent()" << std::endl;
+                EVS_DEBUG_CALL();
 
                 if(m_Events.size() > 0)
                 {
@@ -92,6 +92,7 @@ namespace evs
 
         void EmitEvent(const evs::Event<DataType, IdType>& event)
         {
+            EVS_DEBUG_CALL();
             std::scoped_lock lock(m_ListenersMutex);
 
             auto id = event.Id();
@@ -109,6 +110,7 @@ namespace evs
 
         virtual void Emit(const evs::Event<DataType, IdType>& event) override
         {
+            EVS_DEBUG_CALL();
             {
                 std::scoped_lock lock(m_EventsMutex);
                 m_Events.push_back(event);
@@ -119,6 +121,7 @@ namespace evs
 
         virtual void On(IdType eventId, std::function<bool(const DataType& data)> handler) override
         {
+            EVS_DEBUG_CALL();
             std::scoped_lock lock(m_ListenersMutex);
 
             m_Listeners.push_back(evs::EventListener<DataType, IdType>(handler, eventId));
@@ -139,10 +142,12 @@ namespace evs
     {
         NonThreadedEventBus()
         {
+            EVS_DEBUG_CALL();
         }
 
         virtual void Emit(const evs::Event<DataType, IdType>& event) override
         {
+            EVS_DEBUG_CALL();
             auto id = event.Id();
 
             bool handled = false;
@@ -158,6 +163,7 @@ namespace evs
 
         virtual void On(IdType eventId, std::function<bool(const DataType& data)> handler) override
         {
+            EVS_DEBUG_CALL();
             m_Listeners.push_back(evs::EventListener<DataType, IdType>(handler, eventId));
         }
 
@@ -168,6 +174,8 @@ namespace evs
     template<typename DataType, typename IdType>
     EventBus<DataType, IdType>::EventBus(bool threaded)
     {
+        EVS_DEBUG_CALL();
+        EVS_DEBUG_EXPR(threaded);
         if(threaded)
         {
             m_Impl = std::make_shared<ThreadedEventBus<DataType, IdType>>();
@@ -181,12 +189,14 @@ namespace evs
     template<typename DataType, typename IdType>
     void EventBus<DataType, IdType>::On(IdType eventId, event_handler_type handler)
     {
+        EVS_DEBUG_CALL();
         m_Impl->On(eventId, handler);
     }
 
     template<typename DataType, typename IdType>
     void EventBus<DataType, IdType>::Emit(const event_type& event)
     {
+        EVS_DEBUG_CALL();
         m_Impl->Emit(event);
     }
 }
