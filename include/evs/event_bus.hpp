@@ -1,9 +1,8 @@
 #pragma once
+#include <evs/evs.hpp>
 #include <evs/event.hpp>
 #include <evs/event_listener.hpp>
 #include <memory>
-// #include <vector>
-// #include <unordered_map>
 
 namespace evs
 {
@@ -11,14 +10,14 @@ namespace evs
     struct EventBus
     {
     public:
-        using event_listener_type = evs::EventListener<DataType, IdType>;
+        using event_handler_type  = evs::EventListener<DataType, IdType>::handler_type;
         using event_type          = evs::Event<DataType, IdType>;
         struct EventBusImpl;
 
     public:
         EventBus(bool threaded);
 
-        void On(IdType eventId, event_listener_type::handler_type handler);
+        void On(IdType eventId, event_handler_type handler);
         void Emit(const event_type& event);
 
     private:
@@ -26,22 +25,23 @@ namespace evs
     };
 }
 
-#ifdef __EVS_IMPL
 #include <memory>
 #include <mutex>
 #include <deque>
 #include <atomic>
 #include <thread>
 #include <iostream>
+#include <vector>
+
 namespace evs
 {
     template<typename DataType, typename IdType>
     struct EventBus<DataType, IdType>::EventBusImpl
     {
-        using event_bus_type = EventBus<DataType, IdType>;
+        using event_handler_type = evs::EventListener<DataType, IdType>::handler_type;
 
-        virtual void Emit(const event_bus_type::event_type& event) {}
-        virtual void On(IdType eventId, event_bus_type::event_listener_type::handler_type handler) {}
+        virtual void Emit(const evs::Event<DataType, IdType>& event) {}
+        virtual void On(IdType eventId, event_handler_type handler) {}
     };
 
     template<typename DataType, typename IdType>
@@ -50,13 +50,11 @@ namespace evs
         ThreadedEventBus()
         {
             std::cout << "ThreadedEventBus()" << std::endl;
-
             m_Running = true;
             m_Thread = std::thread(&ThreadedEventBus<DataType, IdType>::WaitForEvents, this);
 
             std::unique_lock<std::mutex> lock(m_ListenersMutex);
-            m_CondVar.wait(lock);
-            std::cout << "ThreadedEventBus initialized!" << std::endl;
+            m_CondVar.wait(lock); // wait for the event thread to initialize
         }
 
         ~ThreadedEventBus()
@@ -68,9 +66,11 @@ namespace evs
 
         void WaitForEvents()
         {
-            std::cout << "ThreadedEventBus::WaitForEvents()" << std::endl;
+            std::unique_lock<std::mutex> lock(m_EventsMutex);
+            std::cout << "WaitForEvents()" << std::endl;
+
             auto emitEvent = [&, this] {
-                std::cout << "ThreadedEventBus::WaitForEvents::lambda emitEvent()" << std::endl;
+                std::cout << "emitEvent()" << std::endl;
 
                 if(m_Events.size() > 0)
                 {
@@ -78,20 +78,13 @@ namespace evs
                     m_Events.pop_front();
 
                     EmitEvent(event);
-
-                    return true;
                 }
-
-                return false;
             };
 
-            std::unique_lock<std::mutex> lock(m_EventsMutex);
 
             m_CondVar.notify_one();
             while(m_Running)
             {
-                std::cout << "m_Running" << std::endl;
-
                 m_CondVar.wait(lock);
                 emitEvent();
             }
@@ -144,12 +137,8 @@ namespace evs
     template<typename DataType, typename IdType>
     struct NonThreadedEventBus : public EventBus<DataType, IdType>::EventBusImpl
     {
-        using event_bus_type = EventBus<DataType, IdType>;
-        using listeners_type = std::unordered_map<IdType, std::vector<evs::EventListener<DataType, IdType>>>;
-
         NonThreadedEventBus()
         {
-            m_Listeners = std::vector<evs::EventListener<DataType, IdType>>();
         }
 
         virtual void Emit(const evs::Event<DataType, IdType>& event) override
@@ -190,7 +179,7 @@ namespace evs
     }
 
     template<typename DataType, typename IdType>
-    void EventBus<DataType, IdType>::On(IdType eventId, event_listener_type::handler_type handler)
+    void EventBus<DataType, IdType>::On(IdType eventId, event_handler_type handler)
     {
         m_Impl->On(eventId, handler);
     }
@@ -201,5 +190,3 @@ namespace evs
         m_Impl->Emit(event);
     }
 }
-
-#endif

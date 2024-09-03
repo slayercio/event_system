@@ -1,4 +1,5 @@
 #pragma once
+#include <evs/evs.hpp>
 #include <evs/event.hpp>
 #include <functional>
 
@@ -23,7 +24,6 @@ namespace evs
     };
 }
 
-#ifdef __EVS_IMPL
 namespace evs
 {
     template<typename DataType, typename IdType>
@@ -47,4 +47,3 @@ namespace evs
         return m_EventId;
     }
 }
-#endif

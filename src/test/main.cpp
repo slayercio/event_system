@@ -1,4 +1,7 @@
+#ifdef _EVS_USE_INLINE
 #define __EVS_IMPL
+#endif
+
 #include <evs/event_bus.hpp>
 #include <iostream>
 #include <Windows.h>
@@ -34,7 +37,7 @@ int main()
             eventBus.Emit(event);
             eventBus.Emit(event2);
         }
-        
+
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 

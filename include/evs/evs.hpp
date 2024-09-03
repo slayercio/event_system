@@ -14,9 +14,9 @@
 #endif
 
 #if defined(_EVS_BUILD_LIB)
-#   define EVS_API EVS_EXPORT
+#   define EVS_EXPORT
 #elif defined(_EVS_USE_LIB)
-#   define EVS_API EVS_IMPORT
+#   define EVS_IMPORT
 #else
 #   define EVS_API
 #endif

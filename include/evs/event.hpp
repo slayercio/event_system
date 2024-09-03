@@ -1,6 +1,7 @@
 #pragma once
 #include <any>
 #include <cstdint>
+#include <evs/evs.hpp>
 
 namespace evs
 {
@@ -23,7 +24,6 @@ namespace evs
     };
 }
 
-#ifdef __EVS_IMPL
 namespace evs
 {
     template<typename DataType, typename IdType>
@@ -44,4 +44,3 @@ namespace evs
         return m_Id;
     }
 }
-#endif
