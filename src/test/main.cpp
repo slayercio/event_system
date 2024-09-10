@@ -1,10 +1,13 @@
-#ifdef _EVS_USE_INLINE
-#define __EVS_IMPL
-#endif
-
+#include <evs/csevent.hpp>
 #include <evs/event_bus.hpp>
 #include <iostream>
 #include <Windows.h>
+#include <memory>
+
+bool handle_int(std::shared_ptr<int> ptr)
+{
+    return false;
+}
 
 int main()
 {
@@ -29,6 +32,16 @@ int main()
     eventBus.Emit(event);
     std::cout << "emitted event" << std::endl;
     eventBus.Emit(event);
+
+    evs::CSEvent<int> OnInt;
+    OnInt.On([&](auto ptr) {
+        EVS_DEBUG_CALL();
+        std::cout << *ptr << std::endl;
+
+        return false;
+    });
+
+    OnInt.Invoke(20);
 
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
